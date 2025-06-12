@@ -64,7 +64,6 @@ function problem5(){
     }
     console.log(solution.join(' '));
 }
-problem5();
 
 function arrowQA(){
     const validArrow = /^>>-{3,5}>$/;
@@ -106,4 +105,49 @@ const result = arrowQAfile(input);
 fs.writeFileSync('bad_arrows.txt', result, 'utf8');   
 console.log('Saved bad arrow indices to bad_arrows.txt');
 */
+
+function arrowSmith(arrows){
+    // sharp arrowhead ">" && "(>>) double fletching" && total length between 6 and 8 units && uniform shaft
+    const goodArrow = (/^(>+)([=-]+)(>)$/);
+    const kept = [];
+    for (const arrow of arrows){
+        const match = arrow.match(goodArrow);
+        if(!match) continue; // it needs fletch shaft head
+        
+        let [, fletch, shaft, head] = match;
+        if (head !== '>') continue; // 1st check arrowhead
+        
+        //  clip fletchings
+        if (fletch.length < 2) continue;
+        fletch = '>>'; 
+
+        //all '=' (repairable), all '-' (good), Mixed? discard.
+        if (/^=+$/.test(shaft)) {
+            shaft = '-'.repeat(shaft.length);
+        } else if (!/^-*$/.test(shaft)) {
+            continue;
+        }
+
+        // 4) Reassemble and validate total length
+        const newArrow = fletch + shaft + head
+        if (newArrow.length >= 6 && newArrow.length <= 8) {
+            kept.push(newArrow);
+        }
+    }
+    return kept.join("\n");
+}
+
+const inputArrows = [
+  ">>----->",
+  ">>>--->",
+  ">>-=--->",
+  ">>--->",
+  ">>-----D",
+  ">>=====>",
+  ">>>===>",
+  ">>===---==>"
+];
+
+console.log(arrowSmith(inputArrows));
+// Expected output: [ '>>----->', '>>--->', '>>--->', '>>----->' ]
 
