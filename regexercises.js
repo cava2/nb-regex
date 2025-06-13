@@ -1,4 +1,5 @@
-
+const { log } = require('console');
+const fs = require('fs');
 function problem1() {
     const input = `1|1101|0 Oloo1i00 1100011! Θ!1010IO i0@I@000 θl10|I0θ O10001II 000θ11/1 0010101Θ 1I110θi1 !1000000 |//i|I@0 1|010011 0θI11011 101Θ1100 001o0010 i000100! Θ!101001 1lθ00011 o001i01/ 111111Θ0 000000@0 I1o0@|11 @0/|01l0 101101O1 11Θ0Θ@1l 011θ0011 l!010O11 00I01111 |01Θ01/1 @011|Θ11 l1l0Oi1| 100/1θ0| 00110110 0@1101I| 11l0O110 IO/0/101 10001I01 0o10110I 0101o01i 1@O0iIl1 111oo001 !000i|11 lI10I01@ @θ@lΘ00l 0lθ0!Θ0@ 1I0@000/ 0111111@ !1θ0@l1O 010111@0 1Θθ|@0l0 011i|10l 10111I@0 11|1ii0I @0@|0|11 101000Θ0 lo010I01 1|01|l1θ 1i|0111l 0!I110θ0 !110i110 0011i110 I01110|1 01@0|0Θ0 000O00I0 0|!@001@ 110i0|00 0O01II!1 1i010001 0100/θ0θ |00l0|11 1IlO001l 10001000 O0/1Ii00 I0O01o11 I0110θΘ0 Θ1!l0000 I010oθIl 1I1/1/10 I@00I0I0 1i@0/Θ10 0!100!1l 1!O1θ100 /Θ11I0i1 @ΘO01010 1oo|1|Oθ 0l!001/1 oo|01lO0 001|0l11 0!O0ooθi 1I110000 OI110000 o1001Θ1I I/0/I0!| 01|θO1!θ 0!1l00/0 I!00!00! 00@i!θ10 O/110θ1O 1OΘi00/i`;
     let output = input.replace(/[0OoθΘ@]/g,'0').replace(/[1Ii!l\/\|]/g,'1'); 
@@ -98,7 +99,6 @@ function arrowQAfile(input){
     .join(' ');
 }
 /*
-const fs = require('fs');
 const input = fs.readFileSync('./arrows.txt', 'utf8');
 const result = arrowQAfile(input);
 
@@ -144,7 +144,6 @@ function arrowSmith(arrows){
 }
 
 /*
-const fs = require('fs');
 const inputPath = 'arrowSmith.txt';
 const testPath = 'arrowSmith2.txt';
 const outputPath = 'repaired_arrows.txt';
@@ -171,9 +170,36 @@ function identifyUsers(inputPath, outputPath){
     
     fs.writeFileSync(outputPath, solution.join('\n'), 'utf8');
 }
-
 /*
-const fs = require('fs');
 identifyUsers('email_log.txt', 'filtered_emails.txt');
 */
 
+
+function logToCsv(inputPath) {
+    const log = fs.readFileSync(inputPath, 'utf8');
+
+    const re = /^(\S+) .*?\[(\d{2})\/([A-Za-z]+)\/(\d{4}):(\d{2}):(\d{2}):(\d{2}) ([+-]\d{4})\] "(\w+) (\S+) HTTP\/\d+\.\d+" (\d{3})/gm;
+
+    const MONTHS = {
+        Jan: '01', Feb: '02', Mar: '03', Apr: '04',
+        May: '05', Jun: '06', Jul: '07', Aug: '08',
+        Sep: '09', Oct: '10', Nov: '11', Dec: '12'
+    };
+
+    const csvRows = Array.from(log.matchAll(re)).map(([
+        _,
+        host, day, monAbbr, year,
+        hour, min, sec,
+        tz, method, path, status
+    ]) => {
+        const month = MONTHS[monAbbr];
+        const isoDate = `${year}-${month}-${day}T${hour}:${min}:${sec}${tz.slice(0, 3)}:${tz.slice(3)}`;
+        return `${host},${isoDate},${method},${path},${status}`;
+    });
+    
+    console.log(csvRows.join('\n')); 
+
+    fs.writeFileSync('converted_log.csv', csvRows.join('\n'), 'utf8');
+}
+
+//logToCsv('log_1.txt');
