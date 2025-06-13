@@ -86,7 +86,7 @@ function arrowQA(){
     console.log(bad.join(' '));  // should give out "2 3 5 6 8"
 }
 
-/*
+
 function arrowQAfile(input){
     const validArrow = /^>>-{3,5}>$/;
     const arrows = input.trim().split(/\n/).map(s => s.trim())
@@ -97,7 +97,7 @@ function arrowQAfile(input){
     .filter(Boolean)
     .join(' ');
 }
-
+/*
 const fs = require('fs');
 const input = fs.readFileSync('./arrows.txt', 'utf8');
 const result = arrowQAfile(input);
@@ -106,13 +106,16 @@ fs.writeFileSync('bad_arrows.txt', result, 'utf8');
 console.log('Saved bad arrow indices to bad_arrows.txt');
 */
 
+
+
 function arrowSmith(arrows){
     // sharp arrowhead ">" && "(>>) double fletching" && total length between 6 and 8 units && uniform shaft
-    const goodArrow = (/^(>+)([=-]+)(>)$/);
+    const goodArrow = (/^(>{2,})([=-]+)(>)$/);
     const kept = [];
     for (const arrow of arrows){
         const match = arrow.match(goodArrow);
-        if(!match) continue; // it needs fletch shaft head
+        
+        if(!match) continue; // it needs fletch-shaft-head
         
         let [, fletch, shaft, head] = match;
         if (head !== '>') continue; // 1st check arrowhead
@@ -121,33 +124,56 @@ function arrowSmith(arrows){
         if (fletch.length < 2) continue;
         fletch = '>>'; 
 
-        //all '=' (repairable), all '-' (good), Mixed? discard.
-        if (/^=+$/.test(shaft)) {
-            shaft = '-'.repeat(shaft.length);
-        } else if (!/^-*$/.test(shaft)) {
+        // 1) Mixed? discard everything that isn’t purely = or purely -
+        if (!/^(?:=+|-+)$/.test(shaft)) {
             continue;
         }
-
+        // 2) All '='? repair → change to all '-'
+        if (shaft[0] === '=') {
+            shaft = '-'.repeat(shaft.length);
+        }
+        // 3) Otherwise it's all '-'
         // 4) Reassemble and validate total length
         const newArrow = fletch + shaft + head
         if (newArrow.length >= 6 && newArrow.length <= 8) {
             kept.push(newArrow);
+        
         }
     }
     return kept.join("\n");
 }
 
-const inputArrows = [
-  ">>----->",
-  ">>>--->",
-  ">>-=--->",
-  ">>--->",
-  ">>-----D",
-  ">>=====>",
-  ">>>===>",
-  ">>===---==>"
-];
+/*
+const fs = require('fs');
+const inputPath = 'arrowSmith.txt';
+const testPath = 'arrowSmith2.txt';
+const outputPath = 'repaired_arrows.txt';
+const arrows = fs.readFileSync(inputPath, 'utf8')
+  .split(/\n/)
+  .map(line => line.trim())      // remove any stray spaces
+  .filter(line => line.length > 0);  // drop blank lines
+const repaired = arrowSmith(arrows);
+fs.writeFileSync(outputPath, repaired, 'utf8');
+console.log(`Repaired arrows saved to ${outputPath}`);
+*/
 
-console.log(arrowSmith(inputArrows));
-// Expected output: [ '>>----->', '>>--->', '>>--->', '>>----->' ]
+function identifyUsers(inputPath, outputPath){
+
+    const text = fs.readFileSync(inputPath, 'utf8');
+    
+    const events = text.split(/\[\d{1,2}\/\d{1,2}\/\d{4},.*?\]/).filter(Boolean);
+
+    const solution = events.map(event => {
+        const username = event.match(/^(?!0x)(?![a-f0-9-]{36}$)[a-zA-Z][\w\.-]{2,}$/m);
+        const email = event.match(/([a-zA-Z0-9_%+-]+(?:[._+][a-zA-Z0-9%+-]+)*)@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/);
+        return username ? username[0] : email ? email[1] : null;
+    }).filter(Boolean);
+    
+    fs.writeFileSync(outputPath, solution.join('\n'), 'utf8');
+}
+
+/*
+const fs = require('fs');
+identifyUsers('email_log.txt', 'filtered_emails.txt');
+*/
 
